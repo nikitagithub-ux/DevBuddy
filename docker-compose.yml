@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:5.5
+    container_name: neo4j_container
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/testpassword
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - devbuddy_network
+
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb_container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - devbuddy_network
+
+  nodejs_app:
+    build: .
+    container_name: nodejs_app_container
+    ports:
+      - "5000:5000"
+    depends_on:
+      - neo4j
+      - mongodb
+    networks:
+      - devbuddy_network
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  neo4j_import:
+  neo4j_plugins:
+  mongo_data:
+
+networks:
+  devbuddy_network:
+    driver: bridge
